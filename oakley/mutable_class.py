@@ -87,6 +87,8 @@ class MutableClass(FancyCM):
     idx = 0
     indent = 0
     
+    _initial_directory = None
+    
     
     # -------------- #
     # !-- Muting --! #
@@ -356,6 +358,9 @@ class MutableClass(FancyCM):
         if file_in_root is None:
             file_in_root = oakley_config["root_file"]
         
+        if MutableClass._initial_directory is None:
+            MutableClass._initial_directory = os.getcwd()
+            
         previous_dir = os.getcwd()
         while not os.path.exists(file_in_root):
             os.chdir('..')
