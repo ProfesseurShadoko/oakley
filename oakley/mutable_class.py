@@ -2,6 +2,8 @@
 from .fancy_string import cstr
 from .fancy_context_manager import FancyCM
 from .print_stack import pStack, Spirit
+from .xconfig import config
+import os
 
 
 
@@ -344,6 +346,16 @@ class MutableClass(FancyCM):
     # ------------- #
     # !-- Utils --! #
     # ------------- #
+    
+    @staticmethod
+    def go_root(file_in_root:str = None) -> str:
+        """
+        Change the current working directory to the root of the project. 
+        This is determined by searching downwards for a specified file.
+        """
+        if file_in_root is None:
+            file_in_root = config.get('root_file', 'setup.sh')
+        
     
     @staticmethod
     def number(value:float) -> str:

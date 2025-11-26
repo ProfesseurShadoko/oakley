@@ -47,6 +47,7 @@ try:
     _notebook_is_unknown = (shell.__class__.__name__ != "ZMQInteractiveShell")
 except Exception:
     in_notebook = False
+    _notebook_is_unknown = False
 
         
 
