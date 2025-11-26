@@ -2,7 +2,7 @@
 from .fancy_string import cstr
 from .fancy_context_manager import FancyCM
 from .print_stack import pStack, Spirit
-from .xconfig import config
+from .xconfig import oakley_config
 import os
 
 
@@ -354,7 +354,26 @@ class MutableClass(FancyCM):
         This is determined by searching downwards for a specified file.
         """
         if file_in_root is None:
-            file_in_root = config.get('root_file', 'setup.sh')
+            file_in_root = oakley_config["root_file"]
+        
+        previous_dir = os.getcwd()
+        while not os.path.exists(file_in_root):
+            os.chdir('..')
+            if previous_dir == os.getcwd():
+                raise FileNotFoundError(f"Could not find root file '{file_in_root}' in any parent directory.")
+            previous_dir = os.getcwd()
+        MutableClass.cwd()
+    
+    @staticmethod
+    def cwd() -> None:
+        """
+        Print the current working directory as a success style message.
+
+        Notes
+        -----
+        Equivalent to calling ``Message(f"Current working directory: ...", '#')``.
+        """
+        MutableClass.print(f"{cstr('[#]').green()} Current working directory: {cstr(os.getcwd()):g}")
         
     
     @staticmethod

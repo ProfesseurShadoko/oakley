@@ -118,14 +118,14 @@ _default_config = {
 }
 
 _config_path = os.path.join(os.path.dirname(__file__), 'config.json')
-config = XConfig(_config_path, default_config=_default_config)
+oakley_config = XConfig(_config_path, default_config=_default_config)
 
 
 
 
 
 if __name__ == "__main__":
-    _test_config_path = config._filepath.replace('config.json', 'test_config.json')
+    _test_config_path = oakley_config._filepath.replace('config.json', 'test_config.json')
     test_config = XConfig(_test_config_path, default_config={"a": 1, "b": 2})
     print("Initial config:", test_config)
     test_config['a'] = 42

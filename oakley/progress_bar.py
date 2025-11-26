@@ -5,7 +5,7 @@ import time
 from .task import Task
 from .message import Message
 from .status import MemoryView, TODO # TODO: create an function 'mute_all' to mute all children of MutableClass
-from .xconfig import config
+from .xconfig import oakley_config
 from typing import Literal
 from .print_stack import in_notebook
 
@@ -151,11 +151,11 @@ class ProgressBar(MutableClass):
         Returns the header part of the progress bar, which can be either
         a percentage or a spinner if the max is unknown.
         """
-        if len(config["spinner"]) == 0 or self.count == self.max:
+        if len(oakley_config["spinner"]) == 0 or self.count == self.max:
             progress_percent = f"{(int(self.count/self.max*100)):02d}%" if self.max>0 and self.count < self.max else "%"
             header = cstr(f"[{progress_percent}]")
         else:
-            header = cstr(f"[{config['spinner'][self.print_count % len(config['spinner'])]}]")
+            header = cstr(f"[{oakley_config['spinner'][self.print_count % len(oakley_config['spinner'])]}]")
         return header.red() if self.count < self.max else header.green()
     
     def _get_bar(self, terminal_width:int) -> str:
@@ -317,9 +317,9 @@ class ProgressBar(MutableClass):
         terminal_size = shutil.get_terminal_size((999, 20)).columns
         
         # account for provided terminal_size in config
-        if config["terminal_width"] > 0 and not _ignore_config:
-            terminal_size = min(terminal_size, config["terminal_width"]) # if terminal size lower than provided, keep the low one
-        
+        if oakley_config["terminal_width"] > 0 and not _ignore_config:
+            terminal_size = min(terminal_size, oakley_config["terminal_width"]) # if terminal size lower than provided, keep the low one
+
         n_tab_chars = ProgressBar.indent + 2 if ProgressBar.indent > 0 else 0
         # Also, if the terminal size is lower than 30, we set is to 30. And let's keep an additional 5 characters of margin.
         return max(min_value, terminal_size - n_tab_chars - margin)
@@ -401,7 +401,7 @@ class ProgressBar(MutableClass):
         assert progressbar_size in ["minimal", "small", "medium", "large", "default"], "Invalid progressbar size. Choose among 'minimal', 'small', 'medium', 'large', 'default'."
         
         # 1. translate argument to terminal width
-        config["terminal_width"] = {
+        oakley_config["terminal_width"] = {
             "minimal": 30,
             "small": 50,
             "medium": 60,
@@ -445,7 +445,7 @@ class ProgressBar(MutableClass):
         if isinstance(spinner_list, str):
             spinner_list = list(spinner_list)
         assert all(isinstance(s, str) for s in spinner_list), "All spinner elements must be strings."
-        config["spinner"] = spinner_list
+        oakley_config["spinner"] = spinner_list
         
 
 if __name__ == '__main__':

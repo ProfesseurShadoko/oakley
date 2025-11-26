@@ -230,17 +230,6 @@ class Message(MutableClass):
             2: ['!']
         }[lvl]
         
-    @staticmethod
-    def cwd() -> None:
-        """
-        Print the current working directory as a success style message.
-
-
-        Notes
-        -----
-        Equivalent to calling ``Message(f"Current working directory: ...", '#')``.
-        """
-        Message(f"Current working directory: {cstr(os.getcwd()):g}", "#")
         
     def list(self, collection:list|dict) -> None:
         """

@@ -4,4 +4,4 @@ from .message import Message
 from .progress_bar import ProgressBar
 from .task import Task
 from .status import MemoryView, TODO, DateTime
-from .xconfig import XConfig, config
+from .xconfig import XConfig, oakley_config
