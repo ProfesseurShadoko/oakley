@@ -144,51 +144,7 @@ class MemoryView(MutableClass):
                 MemoryView.print(f" {i}. Type: {cstr(obj_type.__name__):bb}, Total Size: {size_mb:.2f} MB")
                 MemoryView.tab()
     
-    
-    
-class TODO(MutableClass):
-    """
-    Simple utility for printing TODO entries.
-
-    A TODO item is printed with a small colored prefix:
-    - ``[ ]`` in red   — incomplete
-    - ``[x]`` in green — completed
-
-    Parameters
-    ----------
-    message : str
-        The text of the TODO item.
-    complete : bool, optional
-        Whether the TODO entry is already completed. Default is ``False``.
-
-    Examples
-    --------
-    >>> TODO("Refactor the parser")
-    [ ] TODO: Refactor the parser
-
-    >>> TODO("Implement FFT backend", complete=True)
-    [x] TODO: Implement FFT backend
-    """
-    
-    def __init__(self, message: str, complete:bool = False):
-        """
-        Print a TODO entry.
-
-        Parameters
-        ----------
-        message : str
-            Description of the TODO item.
-        complete : bool, optional
-            Whether the TODO is complete. Default ``False``.
-        """
-        prefix = '[x]' if complete else '[ ]'
-        color = 'g' if complete else 'r'
-        
-        self.print(
-            f"{cstr(prefix):{color}} TODO: {message}"
-        )
-        
-
+ 
 class DateTime(MutableClass):
     """
     Display the current date and time in a formatted style.
@@ -218,11 +174,6 @@ if __name__ == "__main__":
     
     with Message("Displaying memory usage:"):
         MemoryView()
-        
-    Message.par()
-    with Message("Making TODO list:"):
-        TODO("This is a test TODO item.")
-        TODO("This is a completed TODO item.", complete=True)
         
     Message.par()
     with Message("Displaying current date and time:"):

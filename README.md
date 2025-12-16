@@ -12,7 +12,7 @@ This package is designed for developer convenience when running short scripts or
 - `Task` context manager to wrap and time operations, with neat completion/abort output.
 - `ProgressBar` iterator wrapper with estimated remaining time and non-intrusive whisper messages.
 - `MutableClass` base with global mute/tab behavior so multiple components coordinate console output.
-- Small status helpers: `MemoryView`, `TODO` and `DateTime` for quick runtime info.
+- Small status helpers: `MemoryView` and `DateTime` for quick runtime info.
 
 ## Installation
 
@@ -70,9 +70,9 @@ for i in ProgressBar(range(50), size=50):
 Status helpers
 
 ```python
-from oakley import MemoryView, TODO
+from oakley import MemoryView, DateTime()
 MemoryView()              # prints a short memory usage line (requires psutil)
-TODO("Refactor the parser")
+DateTime()
 ```
 
 Mute and indentation

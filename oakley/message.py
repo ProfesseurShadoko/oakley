@@ -291,6 +291,42 @@ class Message(MutableClass):
                     key = f"{cstr(key, f'0{n_digits}d'):{color}}:"
                 
                 Message.print(f"{key} {value}")
+    
+    def todo(self, collection:dict) -> None:
+        """
+        Display a TODO item or list of items.
+
+        Parameters
+        ----------
+        collection : dict
+            A dictionary where keys are TODO descriptions and values are
+            booleans indicating completion status.
+
+
+        Notes
+        -----
+        - Completed items are shown in the color of the message.
+        - Incomplete items are shown in red.
+
+
+        Examples
+        --------
+        >>> Message("My TODOs:").todo({
+        ...     "Write unit tests": False,
+        ...     "Update documentation": True
+        ... })
+        """
+        color = {
+            "#": "g",
+            "?": "y",
+            "i": "c",
+            "!": "r"
+        }[self.type]
+        
+        self.list([
+            f"{cstr(task):{color}}" if complete else cstr(task).red()
+            for task, complete in collection.items()
+        ])
             
 
 
@@ -322,6 +358,12 @@ if __name__ == '__main__':
     
     Message("My Array:", "?").list(my_array)
     Message("Information:").list(my_dict)
+    
+    # todo list
+    Message("My TODOs:", "#").todo({
+        "Write unit tests": False,
+        "Update documentation": True
+    })
     
     
     
