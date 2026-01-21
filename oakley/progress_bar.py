@@ -447,6 +447,28 @@ class ProgressBar(MutableClass):
         assert all(isinstance(s, str) for s in spinner_list), "All spinner elements must be strings."
         oakley_config["spinner"] = spinner_list
         
+        
+    def update(self):
+        """
+        Manually updates the progress bar display.
+
+        This method can be called to refresh the progress bar display
+        outside of the standard iteration flow.
+
+        Examples
+        --------
+        >>> pb = ProgressBar(range(100))
+        >>> for i in range(50):
+        ...     pd.upate() # shows progress
+        ... for i in range(50):
+        ...     pb.update()
+        """
+        try:
+            out = next(self)
+        except StopIteration:
+            return
+        return out
+        
 
 if __name__ == '__main__':
     
