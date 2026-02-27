@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "oakley"
-version = "2.1.13"
+version = "2.2.0"
 description = "A small collection of lightweight, opinionated utilities for printing fancy console output in Python: colored strings, pretty messages, simple progress bars, task context managers, and tiny system/status helpers."
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.8"
