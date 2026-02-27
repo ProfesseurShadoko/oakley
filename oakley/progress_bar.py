@@ -307,22 +307,7 @@ class ProgressBar(MutableClass):
             if self.previous_print_time - self.previous_spinner_time > 0.1:
                 self.previous_spinner_time = self.previous_print_time
                 self.print_count += 1
-            
-            
-    def _get_terminal_width(self, margin:int = 5, min_value:int=25, _ignore_config:bool = False) -> int:
-        """
-        Returns the current terminal width in number of characters.
-        """
-        import shutil
-        terminal_size = shutil.get_terminal_size((999, 20)).columns
-        
-        # account for provided terminal_size in config
-        if oakley_config["terminal_width"] > 0 and not _ignore_config:
-            terminal_size = min(terminal_size, oakley_config["terminal_width"]) # if terminal size lower than provided, keep the low one
 
-        n_tab_chars = ProgressBar.indent + 2 if ProgressBar.indent > 0 else 0
-        # Also, if the terminal size is lower than 30, we set is to 30. And let's keep an additional 5 characters of margin.
-        return max(min_value, terminal_size - n_tab_chars - margin)
             
         
         
@@ -483,7 +468,7 @@ if __name__ == '__main__':
         for i in ProgressBar(range(10_000)):
             time.sleep(5e-4)
             
-    Message.par()
+    Message.print()
     
     # 3. Test whisper
     with Message("Testing whisper"):
@@ -503,7 +488,7 @@ if __name__ == '__main__':
             if i==50:
                 print("This is a normal print.")
     
-    Message.par()
+    Message.print()
     
     # 5. Testing various termial widths
     class LengthMeasuringPB(ProgressBar):
@@ -537,7 +522,7 @@ if __name__ == '__main__':
                 time.sleep(0.02)
         
         
-    Message.par()
+    Message.print()
     with Message("Testing changing terminal size"):
         Message.print("During the following loop, please resize your terminal window to see how the progress bar adapts.")
         for i in ProgressBar(range(1000)):

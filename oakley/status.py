@@ -175,6 +175,6 @@ if __name__ == "__main__":
     with Message("Displaying memory usage:"):
         MemoryView()
         
-    Message.par()
+    Message.print()
     with Message("Displaying current date and time:"):
         DateTime()

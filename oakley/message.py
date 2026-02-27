@@ -88,8 +88,6 @@ class Message(MutableClass):
         ...     Message("This will be hidden.")
         ...     Message.print("This will also be hidden.")
         
-        Paragraph:
-        >>> Message.par() # equivalent to print() (but does nothing if muted)
     """
     
     _active = ['i', '#', '?', '!']
@@ -157,8 +155,7 @@ class Message(MutableClass):
         ...     Message("This will be hidden.")
         ...     Message.print("This will also be hidden.")
         
-        Paragraph:
-        >>> Message.par() # equivalent to print() (but does nothing if muted)
+        
         
         
         """
@@ -327,7 +324,83 @@ class Message(MutableClass):
             f"{cstr(task):{color}}" if complete else cstr(task).red()
             for task, complete in collection.items()
         ])
+    
+    def par(self, paragraph:str="", max_width:int = 150) -> None:
+        """
+        Print a paragraph of text, respecting muting and identation.
+        If the message is too long, it will be split into multiple lines.
+
+        Parameters
+        ----------
+        paragraph : str
+            The text to print as a paragraph. Can include line breaks for readability in the code, but these will be reflowed in the output.
+        max_width : int, optional
+            Maximum width of the paragraph in characters. If the terminal is narrower, it will adapt to the terminal width. Default is 150.
+        """
+        with Message.tab():
+            # 1. Get terminal width
+            terminal_width = self._get_terminal_width()
+            if max_width is not None:
+                terminal_width = min(terminal_width, max_width)
             
+            # 2. Reformat the paragraph: a line break becomes a space, and empty line becomes a line break, double spaces are removed
+            while "  " in paragraph or "\t" in paragraph:
+                paragraph = paragraph.replace("  ", " ")
+                paragraph = paragraph.replace("\t", " ")
+
+            paragraph = paragraph.replace("\n\n", "<oakley_linebreak>").replace("\n", " ").replace("<oakley_linebreak>", "\n")
+
+            # 3. Split paragraph into lines
+            lines = paragraph.split("\n")
+
+            # 4. Further split lines that are too long (split on the previous space)
+            formatted_lines = []
+            line_is_end_of_paragraph = []
+            for line in lines:
+                while cstr(line).length() > terminal_width: # we use cstr.length to count the length without ANSI escape codes
+                    # find the last space within the terminal width
+                    split_idx = line.rfind(" ", 0, terminal_width)
+                    if split_idx == -1:  # no space found, force split
+                        split_idx = terminal_width
+                    formatted_lines.append(line[:split_idx].replace("  ", " ").strip())
+                    line_is_end_of_paragraph.append(False)
+                    line = line[split_idx:].lstrip()  # remove leading spaces for the next line
+                formatted_lines.append(line.replace("  ", " ").strip())
+                line_is_end_of_paragraph.append(True)
+            formatted_lines = [line for line in formatted_lines if line.strip()]
+
+            # 5. Justify the lines (expect the ones that are at the end of a paragraph)
+            # by inserting additional spaces until we reach the target length
+            justified_lines = []
+            justification_target_length = max([cstr(line).length() for line in formatted_lines])
+            for line, is_end_of_paragraph in zip(formatted_lines, line_is_end_of_paragraph):
+                if not is_end_of_paragraph:
+                    while cstr(line).length() < justification_target_length:
+                        for caracter in [".", ":", ";", ",", " "]: # insert additional spaces after these characters first
+                            # find all occurrences of the caracter in the line
+                            indices = [i for i, c in enumerate(line) if c == caracter]
+                            # for each occurence, insert an additional space after it, but stop if we reach the target length
+                            index_offset = 0
+                            for idx in indices:
+                                idx += index_offset
+                                if cstr(line).length() < justification_target_length:
+                                    line = line[:idx+1] + " " + line[idx+1:]
+                                    index_offset += 1
+                                else:
+                                    break
+                justified_lines.append(line)
+            # 5. Print each line with the correct indentation and muting
+            for line in justified_lines:
+                # I have one final issue. If the line starts with an ANSI escape code, then a space, then a word, 
+                # the space won't be removed. I need to take care of this edge case by removing spaces that are right after an ANSI escape code at the beginning of the line
+                # find the first space occurence
+                first_space_idx = line.find(" ")
+                # check the string until the first space, and check wether it is an ANSI escape code (and nothing more)
+                if first_space_idx != -1 and cstr(line[:first_space_idx]).length() == 0:
+                    line = line[:first_space_idx] + line[first_space_idx+1:]
+                self.print(line)
+
+                
 
 
 
@@ -336,18 +409,18 @@ if __name__ == '__main__':
     Message("This is an info message", "i")
     Message("This is a warning message", "?")
     Message("This is an error message", "!")
-    Message.par()
+    Message.print()
     Message.listen(1)
     Message("This is a success message. It should not be displayed.", "#")
     Message("This is a warning. It should be displayed.", "?")
     
     Message.listen()
-    Message.par()
+    Message.print()
     
     with Message.tab():
         Message("This message should be indented.")
     Message("This message should not be indented.")
-    Message.par()
+    Message.print()
     
     
     my_array = [1, 2, 0, 0, 89, 1]
@@ -365,7 +438,25 @@ if __name__ == '__main__':
         "Update documentation": True
     })
     
-    
+    Message("A nice little paragraph to test the par method.").par(
+        cstr(f"""
+        This is a long paragraph, and here is what should happen. First of all,
+        this string is indented, and therefore aditionnal spaces exist between
+        words. These will be removed. Second of all, I have line breaks
+        in this paragraph to improve readability inside the code. But
+        these line breaks should not be visible in the final output, and the
+        text should be reflowed as if it was a single line.
+
+        Finally, when I leave an empty line in the paragraph, this should be interpreted
+        as a new paragraph (a line break). So in the final output, there should be two 
+        paragraphs.
+
+        The {cstr("paragraphs"):b} will be (or should be) cleverly justified, meaning that additional spaces will be inserted between words until the line
+        reaches a certain target length (which is the length of the longest line, or the terminal width if the terminal is narrow). The additional
+        spaces will be inserted after dots, commas, colons, semicolons and spaces first, and then after other characters if necessary. Lines at the
+        end of a paragraph (before a line break) will not be justified, and will keep a normal spacing.
+        """).italic()
+    )
     
     
     

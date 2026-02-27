@@ -283,15 +283,6 @@ class MutableClass(FancyCM):
         
     
     @staticmethod
-    def par() -> None:
-        """
-        Print a blank line respecting mute settings.
-
-        Equivalent to calling :meth:`print` with no arguments.
-        """
-        MutableClass.print(ignore_tabs = True)
-    
-    @staticmethod
     def create_spirit(spirit_message:str) -> Spirit:
         """
         Create and register a `Spirit` in the global print stack.
@@ -502,6 +493,22 @@ class MutableClass(FancyCM):
         """
         MutableClass.print("The Secret Commonwealth greets you!")
 
+
+    def _get_terminal_width(self, margin:int = 5, min_value:int=25, _ignore_config:bool = False) -> int:
+        """
+        Returns the current terminal width in number of characters.
+        """
+        import shutil
+        terminal_size = shutil.get_terminal_size((999, 20)).columns
+        
+        # account for provided terminal_size in config
+        if oakley_config["terminal_width"] > 0 and not _ignore_config:
+            terminal_size = min(terminal_size, oakley_config["terminal_width"]) # if terminal size lower than provided, keep the low one
+
+        n_tab_chars = self.indent + 2 if self.indent > 0 else 0
+        # Also, if the terminal size is lower than 30, we set is to 30. And let's keep an additional 5 characters of margin.
+        return max(min_value, terminal_size - n_tab_chars - margin)
+
         
     
     
@@ -553,14 +560,12 @@ if __name__ == "__main__":
         MutableClass.print("This should be indented.")
     MutableClass.print("This should not be indented.")
     
-    MutableClass.par()
     with MutableClass():
         MutableClass.print("This should be indented.")
         with MutableClass():
             MutableClass.print("This should be more indented.")
         MutableClass.print("This should be indented.")
         
-    MutableClass.par()
     MutableClass.print("Testing time and date functions:")
     with MutableClass():
         MutableClass.print(f"Current date: {MutableClass.date()}")
