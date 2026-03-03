@@ -1,4 +1,5 @@
 __pycache__/
 dist/
 oakley.egg-info/
+api_key.txt
 LICENSE
