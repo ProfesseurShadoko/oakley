@@ -103,6 +103,8 @@ python -m oakley.<filename_without_dot_py>
 ```
 to see examples for each object.
 
+Finally, see [this script](cli_example.py) for an example on how to use the `@cli` decorator on a function.
+
 
 ## Development notes
 
