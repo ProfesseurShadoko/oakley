@@ -5,6 +5,10 @@ from .print_stack import pStack, Spirit
 from .xconfig import oakley_config
 import os
 
+import runpy
+import sys
+import shlex # to split a command string into list of arguments
+
 
 
 class MutableClass(FancyCM):
@@ -508,6 +512,69 @@ class MutableClass(FancyCM):
         n_tab_chars = self.indent + 2 if self.indent > 0 else 0
         # Also, if the terminal size is lower than 30, we set is to 30. And let's keep an additional 5 characters of margin.
         return max(min_value, terminal_size - n_tab_chars - margin)
+    
+    
+    # ------------------ #
+    # !-- Subprocess --! #
+    # ------------------ #
+    
+    @staticmethod
+    def subprocess(python_file:str, args:list|str = "", mute:bool = False) -> None:
+        """
+        Run a Python script as a subprocess with `runpy` (avoids
+        multpiple imports and allows access to `cli.out`).
+        
+        Parameters
+        ----------
+        python_file : str
+            The path to the Python file to run as a subprocess.
+        args : list | str, optional
+            Arguments to pass to the subprocess. Can be a list of strings or a single
+            string. Mustn't include the python file itself, nor the "python" command.
+            If a list, will be made into a string by joining with spaces.
+            Used to create `sys.argv` for the subprocess. Default is an empty string (no arguments).
+        """
+        
+        # 1. Check arguments
+        assert os.path.isfile(python_file), f"File '{python_file}' does not exist."
+        assert python_file.endswith(".py"), f"File '{python_file}' is not a Python file."
+        python_file = os.path.abspath(python_file)
+        
+        # 2. Prepare arguments
+        if isinstance(args, list):
+            args = " ".join(args)
+        command = f"{python_file} {args}"
+        command_args = shlex.split(command)
+        
+        # 3. Save sys.argv and set up new sys.argv for the subprocess
+        original_argv = sys.argv
+        original_cwd = os.getcwd()
+        sys.argv = command_args
+        
+        # 4. Run the subprocess using runpy
+        try:
+            if mute:
+                MutableClass.mute() # this mutes everyone
+            
+            try:
+                runpy.run_path(python_file, run_name="__main__")
+            except SystemExit as e:
+                if not e.code in (0, None):
+                    raise RuntimeError(f"Subprocess '{cstr(python_file):r}' exited with code {cstr(e.code):r}.")
+            
+            
+        except Exception as e:
+            raise RuntimeError(f"Error running subprocess '{cstr(python_file):r}'") from e
+        finally:
+            if mute:
+                MutableClass.unmute()
+            sys.argv = original_argv
+            os.chdir(original_cwd)
+        
+        
+        
+        
+        
 
         
     

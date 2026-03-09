@@ -53,7 +53,7 @@ def _fancy_cli(func):
         if i < len(sig.parameters) - 1:
             default_description += ","
     default_description += "\n\t"
-    default_description += cstr(')').bold() + f" -> {cstr('None'):b}:\n"
+    default_description += cstr(')').bold() + f" -> {cstr('cli'):y}.{cstr('out'):c}:\n"
     if func.__doc__:
         docstring = func.__doc__
         # remove leading \n and trailing \n
@@ -82,6 +82,10 @@ def _fancy_cli(func):
     {cstr('An argument can never be None'):rb} (instead, use -9999 for integer, "None" for strings, etc. and be ready to handle them in
     your function). {cstr('An argument cannot have multiple types'):rb}. {cstr('Booleans must have a default value'):rb}, either True of False, and
     will be turned into flags (e.g. --flag to set the value, leave out to set it to its default).
+    
+    When run through oakley's custom subprocess runner (`{cstr('Message'):g}.{cstr('subprocess'):y}` or `{cstr('Task'):g}.{cstr('subprocess'):y}` or any object that inherits from `{cstr('MutableClass'):g}`),
+    the output of the function is captured inside the {cstr('cli'):y}.{cstr('out'):c} property. This allows direct access to the output of the function
+    when run as a script, without having to write to a file or use other workarounds.
     """
     while "  " in tutorial:
         tutorial = tutorial.replace("  ", " ")
@@ -91,6 +95,7 @@ def _fancy_cli(func):
     # !-- Automatic CLI --! #
     # --------------------- #
 
+    ALLOWED_TYPES = {int, float, str, bool}
 
     parser = argparse.ArgumentParser(
         description=f"Automatically generated CLI for function {func.__name__}.",
@@ -126,12 +131,16 @@ def _fancy_cli(func):
                 choices = list(get_args(annotation))
                 # infer a sensible converter from the first literal value
                 arg_type = type(choices[0]) if choices else str
+                # ensure all Literal choices share the same type
+                assert all(isinstance(c, arg_type) for c in choices), f"All choices for parameter {cstr(param_name):r} must be of the same type. Issue in function {cstr(func.__name__):r}. Incompatible with automatic CLI generation."
             else:
                 arg_type = annotation
         elif param.default is not inspect._empty:
             arg_type = type(param.default)
         else:
             raise Exception(f"Parameter {param_name} must have either a type annotation or a default value.")
+        
+        assert arg_type in ALLOWED_TYPES, f"Type {cstr(arg_type):g} of parameter {cstr(param_name):c} is not supported. Supported types are: {ALLOWED_TYPES}. Issue in the function definition: {cstr(func.__name__):r}. Incomapatible with automatic CLI generation."
 
         # 3. If the type is bool, set action to store_true/store_false depending on the default value.
         #    Booleans must be optional flags (i.e. have a default).
@@ -183,6 +192,7 @@ def _fancy_cli(func):
     # --------------- #
 
     if "-h" in sys.argv or "--help" in sys.argv:
+        Message.print()
         Message("Oakley automatic CLI tutorial").par(tutorial)
             
         Message.print(ignore_tabs=True)
@@ -202,7 +212,7 @@ def _fancy_cli(func):
     kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
 
     # finally run the function
-    func(**kwargs)
+    return func(**kwargs)
 
 
 
@@ -212,7 +222,9 @@ def _fancy_cli(func):
 
 def cli(func):
     """
-    Decorator to register a function as a CLI.
+    Decorator to register a function as a CLI. Access `cli.out` to
+    get the output of the script (which you might want to access
+    when the script is run with subprocess).
 
     Example
     -------
@@ -223,7 +235,8 @@ def cli(func):
     # python script.py --arg1 42 --arg2 "hello" --flag
     ```
     """
-    _fancy_cli(func)
+    out = _fancy_cli(func)
+    cli.out = out
     return func
     
     
