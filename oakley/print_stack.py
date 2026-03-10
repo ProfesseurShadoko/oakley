@@ -1,6 +1,7 @@
 
 
 import sys
+from typing import List
 
 
 class Spirit:
@@ -61,7 +62,7 @@ class PrintListener(Base):
     
     def __init__(self, original_stdout):
         self.original_stdout = original_stdout
-        self.secret_commonwealth:list[Spirit] = [] # we put spirits inside
+        self.secret_commonwealth:List[Spirit] = [] # we put spirits inside
         
         # copy all the attributes of the original stdout to pStack, in case it has any special behavior
         for k, v in original_stdout.__dict__.items():

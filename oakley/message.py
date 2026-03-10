@@ -2,7 +2,7 @@
 
 from .fancy_string import cstr
 from .mutable_class import MutableClass
-from typing import Literal
+from typing import Literal, Union, List, Dict, Any
 import os
 
 
@@ -228,7 +228,7 @@ class Message(MutableClass):
         }[lvl]
         
         
-    def list(self, collection:list|dict) -> None:
+    def list(self, collection:Union[List[Any], Dict[Any, Any]]) -> None:
         """
         Display elements of a list or dictionary in an indented block.
 
@@ -289,7 +289,7 @@ class Message(MutableClass):
                 
                 Message.print(f"{key} {value}")
     
-    def todo(self, collection:dict) -> None:
+    def todo(self, collection:Dict[str, bool]) -> None:
         """
         Display a TODO item or list of items.
 
