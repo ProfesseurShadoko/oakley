@@ -6,7 +6,7 @@ from .task import Task
 from .message import Message
 from .status import MemoryView
 from .xconfig import oakley_config
-from typing import Literal, List, Union
+from typing import Literal
 from .print_stack import in_notebook
 
 
@@ -395,7 +395,7 @@ class ProgressBar(MutableClass):
         }[progressbar_size]
 
     @staticmethod
-    def set_spinner(spinner_list: Union[List[str], int, str] = 0):
+    def set_spinner(spinner_list:list|int|str = 0):
         """
         Sets the spinner characters used in progress bars.
 
