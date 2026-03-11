@@ -202,7 +202,7 @@ def _fancy_cli(func):
         
         Message("Arguments")
         parser.print_help()
-        exit(0)
+        return # avoid exit(0) to prevent breaking notebooks
     
     args = parser.parse_args()
     kwargs = vars(args)
