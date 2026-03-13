@@ -349,6 +349,7 @@ class Message(MutableClass):
                 paragraph = paragraph.replace("\t", " ")
             while "\n " in paragraph or " \n" in paragraph:
                 paragraph = paragraph.replace("\n ", "\n")
+                paragraph = paragraph.replace(" \n", "\n")
 
             paragraph = paragraph.replace("\n\n", "<oakley_linebreak>").replace("\n", " ").replace("<oakley_linebreak>", "\n")
 
