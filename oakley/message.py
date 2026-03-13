@@ -381,7 +381,7 @@ class Message(MutableClass):
                     while cstr(line).length() < justification_target_length:
                         for caracter in [".", ":", ";", ",", " "]: # insert additional spaces after these characters first
                             # find all occurrences of the caracter in the line
-                            indices = [i for i, c in enumerate(line) if c == caracter and not (i==len(line) or (line[i+1] != " " and c != " "))] # only add spaces if a space already exists. do not add spaces if there wasn't a space in the first place
+                            indices = [i for i, c in enumerate(line) if c == caracter and not (i==len(line)-1 or (line[i+1] != " " and c != " "))] # only add spaces if a space already exists. do not add spaces if there wasn't a space in the first place
                             # for each occurence, insert an additional space after it, but stop if we reach the target length
                             index_offset = 0
                             for idx in indices:
