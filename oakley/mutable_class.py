@@ -267,7 +267,8 @@ class MutableClass(FancyCM):
             ignore_tabs = kwargs["ignore_tabs"]
             del kwargs["ignore_tabs"]
         else:
-            ignore_tabs = False
+            # if no args passed (no text), then ignore tabs, to avoid printing tabs on empty lines
+            ignore_tabs = len(args) == 0
             
         if "ignore_mute" in kwargs:
             ignore_mute = kwargs["ignore_mute"]
