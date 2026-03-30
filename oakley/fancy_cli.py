@@ -66,6 +66,8 @@ def _fancy_cli(func):
         docstring += '\n\t\t"""\n'
         docstring = cstr(docstring).red()
         docstring += "\t\t...\n\n"
+    else:
+        docstring = ""
 
     default_description += docstring
     

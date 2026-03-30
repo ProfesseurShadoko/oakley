@@ -276,6 +276,7 @@ class Message(MutableClass):
                 
             if len(collection) == 0:
                 Message.print(f"{cstr('empty'):ri}")
+                return # otherwise bug in next line
             
             # find the longest key in the collection
             max_key_length = max([len(str(key)) for key in collection]) if n_digits is None else n_digits
@@ -375,6 +376,9 @@ class Message(MutableClass):
             # 5. Justify the lines (expect the ones that are at the end of a paragraph)
             # by inserting additional spaces until we reach the target length
             justified_lines = []
+
+            if len(formatted_lines) == 0:
+                return # nothing to print, otherwise bug in next line
             justification_target_length = max([cstr(line).length() for line in formatted_lines])
             for line, is_end_of_paragraph in zip(formatted_lines, line_is_end_of_paragraph):
                 if not is_end_of_paragraph:
