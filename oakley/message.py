@@ -406,6 +406,72 @@ class Message(MutableClass):
                 if first_space_idx != -1 and cstr(line[:first_space_idx]).length() == 0:
                     line = line[:first_space_idx] + line[first_space_idx+1:]
                 self.print(line)
+    
+    @staticmethod
+    def title(title:str, type:Literal["#", "?", "!", "i"] = "i") -> None:
+        """
+        A function to print a title with a specific format and color 
+        depending on the type of the message, ass shown below.
+
+        Parameters
+        ----------
+        title : str
+            The title to print
+        type : Literal["#", "?", "!", "i"], optional
+            The type of the message, by default "i". Fixes the color of the title as well.
+
+
+        Examples
+        --------
+        >>> Message.title("Error", "!")
+        -------------
+        !-- Error --!
+        -------------
+        >>> Message.title("Info", "i")
+        ------------
+        I-- Info --I
+        ------------
+        >>> Message.title("Success", "#")
+        ---------------
+        #-- Success --#
+        ---------------
+        >>> Message.title("Warning", "?")
+        ---------------
+        ?-- Warning --?
+        ---------------
+        """
+        assert type in ["i", "#", "?", "!"], f"Invalid type: {type}. Must be one of ['i', '#', '?', '!']"
+        
+        color = {
+            "i": "cyan",
+            "#": "green",
+            "?": "yellow",
+            "!": "red"
+        }[type]
+
+        # 1. Count the number of letters in the title (without ANSI escape codes)
+        n_letters = cstr(title).length()
+
+        # 2. Create the title string with the correct format
+        dot_str = "-" * (n_letters + 8)
+        title_str = f"{type.upper()}-- {title} --{type.upper()}"
+        dot_str = f"{cstr(dot_str):{color[0]}}"
+        title_str = f"{cstr(title_str):{color[0]}}"
+
+        # 3. Print ignoring tabs but adding correct amount of spaces for identation
+        n_spaces = Message.indent + 2 if Message.indent > 0 else 0
+
+        Message.print()
+        Message.print(
+            " " * n_spaces + dot_str, ignore_tabs=True
+        )
+        Message.print(
+            " " * n_spaces + title_str, ignore_tabs=True
+        )
+        Message.print(
+            " " * n_spaces + dot_str, ignore_tabs=True
+        )
+        Message.print()
 
                 
 
@@ -444,6 +510,8 @@ if __name__ == '__main__':
         "Write unit tests": False,
         "Update documentation": True
     })
+
+    Message.title("A nice paragraph", "#")
     
     Message("A nice little paragraph to test the par method.").par(
         cstr(f"""
@@ -464,6 +532,15 @@ if __name__ == '__main__':
         end of a paragraph (before a line break) will not be justified, and will keep a normal spacing.
         """).italic()
     )
+
+    Message.title("Testing with identation", "?")
+    Message.print("Let's add identation!")
+    with Message.tab():
+        with Message.tab():
+            Message.title("Fail", "!")
+            Message.print("Bla bla bla")
+            Message.title("Info", "i")
+            Message.print("Bla bla bla")
     
     
     
