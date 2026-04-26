@@ -240,8 +240,8 @@ def cli(func):
     out = _fancy_cli(func)
     cli.out = out
     return func
-    
-    
+
+
 
 
 

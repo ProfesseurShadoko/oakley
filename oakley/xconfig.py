@@ -77,6 +77,12 @@ class XConfig(dict):
         
         with open(self._filepath, 'r') as f:
             file_config = json.load(f)
+            
+        # for every key in the default config that is not in the file config, add it to the file config
+        for key, value in self._default_config.items():
+            if key not in file_config:
+                file_config[key] = value
+
         super().__init__(file_config)
         
     def reset(self):
@@ -114,7 +120,8 @@ class XConfig(dict):
 _default_config = {
     "terminal_width": -1, # if -1, auto-detect,
     "spinner": [],
-    "root_file": "README.md"
+    "root_file": "README.md",
+    "webhook_url": "NONE",
 }
 
 _config_path = os.path.join(os.path.dirname(__file__), 'config.json')

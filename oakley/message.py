@@ -4,7 +4,8 @@ from .fancy_string import cstr
 from .mutable_class import MutableClass
 from typing import Literal
 import os
-
+import requests
+from xconfig import oakley_config
 
 
 
@@ -205,7 +206,6 @@ class Message(MutableClass):
         """
         Set the verbosity level controlling which message types are printed.
 
-
         Parameters
         ----------
         lvl : int, optional
@@ -226,6 +226,11 @@ class Message(MutableClass):
             1: ['?', '!'],
             2: ['!']
         }[lvl]
+
+
+    # ------------------- #
+    # !-- Collections --! #
+    # ------------------- #
         
         
     def list(self, collection:list|dict) -> None:
@@ -325,6 +330,11 @@ class Message(MutableClass):
             f"{cstr(task):{color}}" if complete else cstr(task).red()
             for task, complete in collection.items()
         ])
+    
+
+    # ------------------ #
+    # !-- Paragraphs --! #
+    # ------------------ #
     
     def par(self, paragraph:str="", max_width:int = 150) -> None:
         """
@@ -472,6 +482,53 @@ class Message(MutableClass):
             " " * n_spaces + dot_str, ignore_tabs=True
         )
         Message.print()
+    
+
+    # -------------------- #
+    # !-- Notification --! #
+    # -------------------- #
+
+    @staticmethod
+    def send(
+        message:str,
+        filepath:str = None,
+        meta:bool = True
+    ):
+        """
+        Sends a message to a predefined webhook URL for Discord.
+
+        Parameters
+        ----------
+        message : str
+            The message to send. Doesn't support color codes.
+        filepath : str, optional
+            If provided, the content of the file at this path will be included in the message.
+            The name of the file will also be included.
+        meta : bool, optional
+            Wether to include metadata (current working directory, system arguments)
+            in the message. Default is True.
+
+        Notes
+        -----
+        If you haven't specified a webhook URL in the config file, this function will silently fail, and
+        print a warning message. This function is meant for Discord, as it is the easiest to set up and use.
+        On discord, select a server and open its settings. Open the “Integrations” tab, click “Webhooks”, “New Webhook.”
+        Copy the URL and add it to the configuration file the following way:
+        ```python
+        from oakley import oakley_config
+        oakley_config["webhook_url"] = "https://discord.com/api/webhooks/..."
+        ```
+        You only need to do this once.
+        """
+
+        if oakley_config["webhook_url"] == "NONE":
+            Message("Unable to send notification: no webhook URL provided in config.", "!").par(
+                f"""
+                To send notifications, please provide a webhook URL in the config file. See the documentation
+                of the `{cstr("Message").green()}.{cstr("send").yellow()}` method for more details.
+                """
+            )
+        
 
                 
 
