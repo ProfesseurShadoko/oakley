@@ -5,7 +5,8 @@ from .fancy_context_manager import FancyCM
 from typing import Literal
 import time
 from .print_stack import in_notebook, _notebook_is_unknown
-
+from .message import Message
+import traceback
 
 class Task(MutableClass):
     """
@@ -47,7 +48,7 @@ class Task(MutableClass):
     running_tasks = []
     last_task_runtime = None
     
-    def __init__(self, msg:str) -> None:
+    def __init__(self, msg:str, notify:bool = False, meta:bool = False) -> None:
         """
         Initialize a new task wrapper.
 
@@ -55,10 +56,19 @@ class Task(MutableClass):
         ----------
         msg : str
             The message describing the task being executed.
+        notify : bool, optional
+            Whether to send a notification to the discord server when the task completes or is aborted. Default is False.
+            Send the documentation of the `Message.send` method for more information on how to setup `oakley` to enable
+            notifications.
+        meta : bool, optional
+            Whether to include metadata (hostname, command, directory) in the notification message. Default is False.
+            Unused if `notify` is False.
         """
         self.msg = msg
         self.spirit = self.create_spirit("") # placeholder spirit
-       
+        self.notify = notify
+        self.meta = meta
+
     def _complete(self) -> None:
         Task.last_task_runtime = time.time() - self.start_time
         
@@ -71,13 +81,40 @@ class Task(MutableClass):
             self.print(
                 f" ({cstr(self.time(time.time()-self.start_time)).blue()})", ignore_tabs=True
             )
+        
+        if self.notify:
+            Message.send(
+                "\n".join([
+                    f'task: {self.msg}',
+                    'status: completed',
+                    f'runtime: {self.time(Task.last_task_runtime)}'
+                ]),
+                meta=self.meta
+            )
     
-    def _abort(self) -> None:        
-        self.print() # we might still be on the line of the first print statement of the Task function, don't stay on the same line
+    def _abort(self, exc_type, exc_value, exc_tb) -> None:        
+        if self.spirit.is_alive():
+            Task.print(self.spirit.kill(), end='', ignore_tabs=True) # go to new line immediately
 
         self.print(
             cstr('[!]').red(), "Task aborted after:", cstr(self.time(time.time()-self.start_time)).red()
         )
+
+        if self.notify:
+            Message.send(
+                "\n".join([
+                    f'task: {self.msg}',
+                    'status: aborted',
+                    f'runtime: {self.time(time.time()-self.start_time)}',
+                    f'exception: {exc_type.__name__}: {exc_value}'
+                ]),
+                meta=self.meta
+            )
+            # convert traceback to string
+            tb_str = ''.join(traceback.format_exception(exc_type, exc_value, exc_tb))
+            Message.send(
+                tb_str, meta=False
+            )
         
         # assert self.__class__.running_tasks.pop() == self, "The task was not removed from the list of running tasks. This should not happen."
     
@@ -95,16 +132,25 @@ class Task(MutableClass):
         
         # if we are in an unknown environment, always go to new_line
         if in_notebook and _notebook_is_unknown:
-            Task.print(self.spirit.kill(), end='') # go to new line immediately
+            Task.print(self.spirit.kill(), end='', ignore_tabs=True) # go to new line immediately
         
         self.start_time = time.time()
         super().__enter__() # add to the indentation level
+
+        # notification for task start
+        if self.notify:
+            Message.send(
+                "\n".join([
+                    f'task: {self.msg}',
+                    'status: started'
+                ]), meta=self.meta
+            )
     
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None:
             self._complete()
         else:
-            self._abort()
+            self._abort(exc_type, exc_value, traceback)
         super().__exit__(exc_type, exc_value, traceback) # rmeoves the indentation level and handles the exception if any
         
     
@@ -128,6 +174,8 @@ if __name__ == '__main__':
                 time.sleep(1)
             Message(f"Computation {i+1}/3 successful", "#")
 
-    with Task("Computing something broken"):
+    with Task("Heavy computing but successful", notify=True):
+        time.sleep(1)
+    with Task("Heavy computing but broken", notify=True):
         time.sleep(1)
         x = 1/0

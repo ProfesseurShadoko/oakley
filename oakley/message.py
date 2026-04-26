@@ -5,8 +5,9 @@ from .mutable_class import MutableClass
 from typing import Literal
 import os
 import requests
-from xconfig import oakley_config
-
+from .xconfig import oakley_config
+import sys
+import socket
 
 
 class Message(MutableClass):
@@ -521,6 +522,7 @@ class Message(MutableClass):
         You only need to do this once.
         """
 
+        # 1. Check config
         if oakley_config["webhook_url"] == "NONE":
             Message("Unable to send notification: no webhook URL provided in config.", "!").par(
                 f"""
@@ -528,6 +530,56 @@ class Message(MutableClass):
                 of the `{cstr("Message").green()}.{cstr("send").yellow()}` method for more details.
                 """
             )
+            return
+        
+        # 2. Check filepath if provided
+        if filepath is not None:
+            assert os.path.isfile(filepath), f"Provided filepath is not a file: {filepath}"
+        
+        # 3. Create message
+        cmd = sys.executable + " " + " ".join(sys.argv)
+        cwd = os.getcwd()
+        hostname = socket.gethostname().upper()
+        
+        content = f"@{hostname}\n{len(hostname)*'-'}-\n\nCommand: {cmd}\nDirectory: {cwd}\n\n@MESSAGE\n{"-"*7}\n\n{message}"
+        if not meta:
+            content = message
+        content = "```\n" + content + "\n```\n"
+
+        # 4. Send
+        try:
+            if filepath is None:
+                requests.post(
+                    oakley_config["webhook_url"],
+                    json={
+                        "content": content
+                    }
+                )
+            else:
+                with open(filepath, "r") as f:
+                    requests.post(
+                        oakley_config["webhook_url"],
+                        files={
+                            "file": f
+                        },
+                        data={
+                            "content": content
+                        }
+                    )
+
+        except Exception as e:
+            with Message("Failed to send notification:", "!"):
+                Message.print(str(e))
+
+        # 5. Print to console what was sent
+        with Message("Notification:", "#"):
+            pass
+        
+
+        
+
+        
+
         
 
                 
@@ -598,6 +650,12 @@ if __name__ == '__main__':
             Message.print("Bla bla bla")
             Message.title("Info", "i")
             Message.print("Bla bla bla")
+    
+    
+    Message.title("Testing notification system", "!")
+    Message.send("Oakley notification system is being tested.")
+    # let's send a file
+    Message.send("Oakley current configuration file.", filepath="oakley/config.json", meta=False)
     
     
     

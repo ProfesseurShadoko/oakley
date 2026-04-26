@@ -158,12 +158,19 @@ class Cstr(str):
             
         return out
     
+    # return string without color chars
+    def strip_ansi(self) -> str:
+        """
+        Returns the string without ANSI escape codes.
+        """
+        return ANSI_RE.sub('', self)
+    
     def length(self) -> int:
         """
         Returns the length of the string without ANSI escape codes.
         """
         if not in_notebook:
-            return len(ANSI_RE.sub('', self))
+            return len(self.strip_ansi())
         else:
             return len(self)
 
