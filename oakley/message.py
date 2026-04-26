@@ -571,10 +571,6 @@ class Message(MutableClass):
             with Message("Failed to send notification:", "!"):
                 Message.print(str(e))
 
-        # 5. Print to console what was sent
-        with Message("Notification:", "#"):
-            pass
-        
 
         
 
