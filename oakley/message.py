@@ -556,7 +556,7 @@ class Message(MutableClass):
                     }
                 )
             else:
-                with open(filepath, "r") as f:
+                with open(filepath, "rb") as f:
                     requests.post(
                         oakley_config["webhook_url"],
                         files={
