@@ -110,6 +110,9 @@ class Task(MutableClass):
                 ]),
                 meta=self.meta
             )
+            # if exception was KeyboardInterrupt, do not send the traceback
+            if exc_type is KeyboardInterrupt:
+                return
             # convert traceback to string
             tb_str = ''.join(traceback.format_exception(exc_type, exc_value, exc_tb))
             Message.send(
