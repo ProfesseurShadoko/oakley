@@ -1,4 +1,4 @@
-__version__ = "3.2.2"
+__version__ = "3.2.3"
 
 from .fancy_string import cstr
 from .message import Message

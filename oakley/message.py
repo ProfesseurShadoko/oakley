@@ -541,7 +541,7 @@ class Message(MutableClass):
         cwd = os.getcwd()
         hostname = socket.gethostname().upper()
         
-        content = f"@{hostname}\n{len(hostname)*'-'}-\n\nCommand: {cmd}\nDirectory: {cwd}\n\n@MESSAGE\n{"-"*7}\n\n{message}"
+        content = f"@{hostname}\n{len(hostname)*'-'}-\n\nCommand: {cmd}\nDirectory: {cwd}\n\n@MESSAGE\n{'-'*7}\n\n{message}"
         if not meta:
             content = message
         content = "```\n" + content + "\n```\n"
