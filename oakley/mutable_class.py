@@ -332,6 +332,7 @@ class MutableClass(FancyCM):
         ignore_capture = kwargs.get("ignore_capture", False)
         end = kwargs.get("end", "\n")
         sep = kwargs.get("sep", " ")
+        kwargs["flush"] = kwargs.get("flush", True)
 
 
         # delete the special keys from kwargs if they exist
