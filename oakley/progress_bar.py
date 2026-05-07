@@ -292,12 +292,16 @@ class ProgressBar(MutableClass):
         
         If not newline, then the print ends with '\r' instead of '\n'.
         """
+        ignore_capture = (self.max != self.count or self.max == 0)
+        # this corresponds to the end of the loop => we add the
+        # finale print of the progressbar to the capture
+
         if msg != self.previous_print:
             n_to_erase = cstr(self.previous_print).length()
             n_to_erase = min(self._get_terminal_width(min_value=0, margin=5, _ignore_config=True), n_to_erase)
-            self.print("\r", end="", ignore_tabs=True) # go back to the beginning of the line
+            self.print("\r", end="", ignore_tabs=True, ignore_capture=True) # go back to the beginning of the line
             n_spaces = max(0, n_to_erase - cstr(msg).length())
-            self.print(msg + n_spaces*" ", end="\n" if newline else "") # go back to the beginning of the line and erase previous content
+            self.print(msg + n_spaces*" ", end="\n" if newline else "", ignore_capture=ignore_capture) # go back to the beginning of the line and erase previous content
             
             # 3. Update previous print
             self.previous_print = msg
@@ -350,8 +354,8 @@ class ProgressBar(MutableClass):
         ProgressBar.current_instance._print_pb(to_print)
         ProgressBar.current_instance.previous_print_time = -999 # so that it prints again right away
         ProgressBar.current_instance.show()
-        
-        
+    
+
     # --------------- #
     # !-- Configs --! #
     # --------------- #
@@ -457,90 +461,94 @@ class ProgressBar(MutableClass):
 
 if __name__ == '__main__':
     
-    
-    # 1. Test in normal conditions    
-    with Message("Computing something heavy"):
-        for i in ProgressBar(range(100)):
-            time.sleep(0.05)
-    
-    # 2. Test when super fast
-    with Message("Computing something super fast"):
-        for i in ProgressBar(range(10_000)):
-            time.sleep(5e-4)
-            
-    Message.print()
-    
-    # 3. Test whisper
-    with Message("Testing whisper"):
-        for i in ProgressBar(range(100)):
-            time.sleep(0.03)
-            if i==50:
-                ProgressBar.whisper("Halfway there!")
-            if i==70:
-                Message("Messages work as well")
-            if i==90:
-                print("And the standard 'print' as well")
+
+    with ProgressBar.capture():
+        
+        # 1. Test in normal conditions    
+        with Message("Computing something heavy"):
+            for i in ProgressBar(range(100)):
+                time.sleep(0.05)
+        
+        # 2. Test when super fast
+        with Message("Computing something super fast"):
+            for i in ProgressBar(range(10_000)):
+                time.sleep(5e-4)
                 
-    # 4. Testing other prints
-    with Message("Testing normal prints"):
-        for i in ProgressBar(range(100)):
-            time.sleep(0.03)
-            if i==50:
-                print("This is a normal print.")
-    
-    Message.print()
-    
-    # 5. Testing various termial widths
-    class LengthMeasuringPB(ProgressBar):
+        Message.print()
         
+        # 3. Test whisper
+        with Message("Testing whisper"):
+            for i in ProgressBar(range(100)):
+                time.sleep(0.03)
+                if i==50:
+                    ProgressBar.whisper("Halfway there!")
+                if i==70:
+                    Message("Messages work as well")
+                if i==90:
+                    print("And the standard 'print' as well")
+                    
+        # 4. Testing other prints
+        with Message("Testing normal prints"):
+            for i in ProgressBar(range(100)):
+                time.sleep(0.03)
+                if i==50:
+                    print("This is a normal print.")
         
+        Message.print()
         
-        def __init__(self, terminal_width:int, *args, **kwargs):
-            self.terminal_width = terminal_width
-            super().__init__(*args, **kwargs)
-            self.print_of_max_length = ""
+        # 5. Testing various termial widths
+        class LengthMeasuringPB(ProgressBar):
             
             
-        def __next__(self):
-            if cstr(self.previous_print).length() > cstr(self.print_of_max_length).length():
-                self.print_of_max_length = self.previous_print
             
-            try:
-                return super().__next__()
-            except StopIteration:
-                with Message(f"Max print length was {cstr(cstr(self.print_of_max_length).length()):c} (max allowed {self.terminal_width})"):
-                    Message.print(f"The print was: '{self.print_of_max_length}'")
-                raise(StopIteration())
-            
-        def _get_terminal_width(self, *args, **kwargs):
-            return self.terminal_width  
+            def __init__(self, terminal_width:int, *args, **kwargs):
+                self.terminal_width = terminal_width
+                super().__init__(*args, **kwargs)
+                self.print_of_max_length = ""
                 
-    
-    for width in [30, 40, 50, 70, 80]:
-        with Message(f"Testing terminal width = {width}"):
-            for i in LengthMeasuringPB(width, range(100)):
+                
+            def __next__(self):
+                if cstr(self.previous_print).length() > cstr(self.print_of_max_length).length():
+                    self.print_of_max_length = self.previous_print
+                
+                try:
+                    return super().__next__()
+                except StopIteration:
+                    with Message(f"Max print length was {cstr(cstr(self.print_of_max_length).length()):c} (max allowed {self.terminal_width})"):
+                        Message.print(f"The print was: '{self.print_of_max_length}'")
+                    raise(StopIteration())
+                
+            def _get_terminal_width(self, *args, **kwargs):
+                return self.terminal_width  
+                    
+        
+        for width in [30, 40, 50, 70, 80]:
+            with Message(f"Testing terminal width = {width}"):
+                for i in LengthMeasuringPB(width, range(100)):
+                    time.sleep(0.02)
+            
+            
+        Message.print()
+        with Message("Testing changing terminal size"):
+            Message.print("During the following loop, please resize your terminal window to see how the progress bar adapts.")
+            for i in ProgressBar(range(1000)):
                 time.sleep(0.02)
+                
+                
+        # 6. Real cas escenario
+        n_iters = 5000
+        time_per_iter = 600 / n_iters # 10 minutes total
+        with Message("Processing data..."):
+            time_start = time.time()
+            for i in ProgressBar(range(n_iters)):
+                time.sleep(time_per_iter)
+                
+                if time.time() - time_start > 5:
+                    Message("Let's not go any further and exit now!", "?")
+                    break
+                
+                
+    Message.title("Checkin recorded output", "!")
+    output = ProgressBar.pop()
+    Message.print(output)         
         
-        
-    Message.print()
-    with Message("Testing changing terminal size"):
-        Message.print("During the following loop, please resize your terminal window to see how the progress bar adapts.")
-        for i in ProgressBar(range(1000)):
-            time.sleep(0.02)
-            
-            
-    # 6. Real cas escenario
-    n_iters = 5000
-    time_per_iter = 600 / n_iters # 10 minutes total
-    with Message("Processing data..."):
-        time_start = time.time()
-        for i in ProgressBar(range(n_iters)):
-            time.sleep(time_per_iter)
-            
-            if time.time() - time_start > 20:
-                Message("Let's not go any further and exit now!", "?")
-                break
-            
-            
-            
-    

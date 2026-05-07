@@ -90,6 +90,8 @@ class MutableClass(FancyCM):
     mute_count = 0
     idx = 0
     indent = 0
+    capture_output_count = 0
+    current_capture = {} # dict capture level -> captured string
     
     _initial_directory = None
     
@@ -225,7 +227,64 @@ class MutableClass(FancyCM):
         MutableClass.untab()
         super().__exit__(*args)
     
+
+    # --------------- #
+    # !-- Capture --! #
+    # --------------- #
+
+    @staticmethod
+    def capture() -> FancyCM:
+        """
+        Records everything that gets printed by `MutableClass.print` into an internal string buffer, which can be retrieved with :meth:`pop`.
+        If the class is muted, the capture won't record outputs.
+        """
+        MutableClass.capture_output_count += 1
+
+        class CaptureContext(FancyCM):
+            def __exit__(self, *args):
+                MutableClass.stop_capture()
+                super().__exit__(*args)
+
+        return CaptureContext()
     
+    @property
+    def capture_output(self) -> bool:
+        return MutableClass.capture_output_count > 0
+    
+    @staticmethod
+    def _add_to_capture(message: str) -> None:
+        """
+        Adds a string to the correct capture buffer(s) based on the current capture level.
+        """
+        # remove ANSI color codes from message
+        message = cstr(message).strip_ansi()
+        if MutableClass.capture_output:
+            level = MutableClass.capture_output_count
+            for l in range(1, level + 1):
+                if l not in MutableClass.current_capture:
+                    MutableClass.current_capture[l] = ""
+                MutableClass.current_capture[l] += message
+
+    @staticmethod
+    def stop_capture() -> None:
+        """
+        Stop capturing output. Does not clear the current capture buffer.
+        """
+        MutableClass.capture_output_count -= 1
+    
+    @staticmethod
+    def pop() -> str:
+        """
+        Retrieves the current captured output. The capture must have been stopped to retrieve the output,
+        otherwise the output will be empty.
+        """
+        captured = MutableClass.current_capture.get(MutableClass.capture_output_count + 1, "")
+        # delete every key in the dict that is higher than the current capture level, to clear all nested captures as well
+        for key in list(MutableClass.current_capture.keys()):
+            if key > MutableClass.capture_output_count:
+                del MutableClass.current_capture[key]
+        return captured
+
     # ------------- #
     # !-- Print --! #
     # ------------- #
@@ -240,13 +299,17 @@ class MutableClass(FancyCM):
         *args :
             Positional arguments forwarded to Python's built-in ``print``.
         **kwargs :
-            Keyword arguments forwarded to ``print``. Two special keys are:
+            Keyword arguments forwarded to ``print``. Three special keys are:
 
             ignore_tabs : bool, optional
                 If ``True``, indentation is not applied to this print call.
 
             ignore_mute : bool, optional
                 If ``True``, the message is printed even when muted.
+            
+            ignore_capture : bool, optional
+                If ``True``, the message is not recorded in the capture buffer even if capture mode is active. Usefull for progress bars.
+
 
         Notes
         -----
@@ -262,30 +325,52 @@ class MutableClass(FancyCM):
         ...     MutableClass.print("Indented")
             > Indented
         """
-        
+
+        # 1. Handle special kwargs
+        ignore_tabs = kwargs.get("ignore_tabs", len(args) == 0)
+        ignore_mute = kwargs.get("ignore_mute", False)
+        ignore_capture = kwargs.get("ignore_capture", False)
+        end = kwargs.get("end", "\n")
+        sep = kwargs.get("sep", " ")
+
+
+        # delete the special keys from kwargs if they exist
         if "ignore_tabs" in kwargs:
-            ignore_tabs = kwargs["ignore_tabs"]
             del kwargs["ignore_tabs"]
-        else:
-            # if no args passed (no text), then ignore tabs, to avoid printing tabs on empty lines
-            ignore_tabs = len(args) == 0
-            
         if "ignore_mute" in kwargs:
-            ignore_mute = kwargs["ignore_mute"]
             del kwargs["ignore_mute"]
-        else:
-            ignore_mute = False
-            
-        if not 'flush' in kwargs:
-            kwargs['flush'] = True
-            
+        if "ignore_capture" in kwargs:
+            del kwargs["ignore_capture"]
+
+        # 2. Handle mute (just return)
         if MutableClass.muted() and not ignore_mute:
             return
         
-        if MutableClass.indent > 0 and not ignore_tabs:
-            print(" " + ">" * MutableClass.indent, end=" ")
-        print(*args, **kwargs)
+        # 3. Simply print if without tabs
+        if MutableClass.indent == 0 or ignore_tabs:
+            if MutableClass.capture_output and not ignore_capture:
+                MutableClass._add_to_capture(sep.join(str(arg) for arg in args) + end)
+            print(*args, **kwargs)
+            return
         
+        # 4. Handle \n to keep indentation for multiline prints
+        message = sep.join(str(arg) for arg in args)
+        lines = message.split("\n") # this is of length at least 1
+
+        if "sep" in kwargs:
+            del kwargs["sep"] # we already used it!
+
+        if not ignore_tabs:
+            # build the output to print by adding tabs to each (non-empty) line
+            for i in range(len(lines)):
+                if lines[i].strip() != "":
+                    lines[i] = " " + ">" * MutableClass.indent + " " + lines[i]
+
+        if MutableClass.capture_output and not ignore_capture:
+            MutableClass._add_to_capture("\n".join(lines) + end)
+        
+        print(*lines, **kwargs, sep="\n")
+
     
     @staticmethod
     def create_spirit(spirit_message:str) -> Spirit:
@@ -639,6 +724,25 @@ if __name__ == "__main__":
         MutableClass.print(f"Current date: {MutableClass.date()}")
         MutableClass.print(f"Current time and date: {MutableClass.time_date()}")
         MutableClass.print(f"123.456 seconds is {MutableClass.time(123.456)}")
+    
+    MutableClass.print("Testing capture:")
+    with MutableClass.capture():
+        MutableClass.print("This is captured is the base capture frame.")
+        MutableClass.print("This is also captured in the base capture frame.")
+        with MutableClass.tab():
+            MutableClass.print(f"This is still capture in the base frame\nbut with tabs and {cstr('color'):y}.")
+            with MutableClass.capture():
+                MutableClass.print("This is captured in the first nested capture frame, and in the base frame as well.")
+                MutableClass.print("This should not get caputred.\nNot at all.",1,2, ignore_capture=True)
+            nested_capture = MutableClass.pop()
+        MutableClass.print("Back to the base capture frame.", "Here is my favourite number", 17, sep = "\n")
+        MutableClass.print("This should not be captured.", ignore_capture=True)
+    MutableClass.print()
+    MutableClass.print("Captured output from the base frame:")
+    MutableClass.print(repr(MutableClass.pop()))
+    MutableClass.print("Captured output from the nested frame:")
+    MutableClass.print(repr(nested_capture))
+        
     
     MutableClass.print("Done!")
     

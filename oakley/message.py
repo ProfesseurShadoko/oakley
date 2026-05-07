@@ -648,10 +648,10 @@ if __name__ == '__main__':
             Message.print("Bla bla bla")
     
     
-    Message.title("Testing notification system", "!")
-    Message.send("Oakley notification system is being tested.")
+    #Message.title("Testing notification system", "!") # let's not :) but it works this way
+    #Message.send("Oakley notification system is being tested.")
     # let's send a file
-    Message.send("Oakley current configuration file.", filepath="oakley/config.json", meta=False)
+    #Message.send("Oakley current configuration file.", filepath="oakley/config.json", meta=False)
     
     
     
