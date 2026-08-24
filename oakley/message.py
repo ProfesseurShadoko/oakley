@@ -505,7 +505,7 @@ class Message(MutableClass):
         """
         assert not self.muted(), "Cannot prompt for input while messages are muted."
         with Message.tab():
-            Message.print(" ", end="")
+            Message.print("", end="")
             user_input = input("")
 
         if parser is not None:
