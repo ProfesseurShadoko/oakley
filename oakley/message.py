@@ -483,6 +483,42 @@ class Message(MutableClass):
             " " * n_spaces + dot_str, ignore_tabs=True
         )
         Message.print()
+
+
+    # ------------- #
+    # !-- Input --! #
+    # ------------- #
+
+    def input(self, parser:callable = None) -> str:
+        """
+        Prompt the user for input after displaying the message.
+
+        Parameters
+        ----------
+        parser : callable, optional
+            A function to parse the user's input. If not provided, the input is returned as a string.
+
+        Returns
+        -------
+        str
+            The user's input as a string.
+        """
+        assert not self.muted(), "Cannot prompt for input while messages are muted."
+        with Message.tab():
+            Message.print(" ", end="")
+            user_input = input("")
+
+        if parser is not None:
+            try:
+                return parser(user_input)
+            except Exception as e:
+                Message("Error parsing input:", "!")
+                with Message.tab():
+                    Message.print(cstr(e).red())
+                raise e
+        return user_input
+        
+
     
 
     # -------------------- #
@@ -653,6 +689,10 @@ if __name__ == '__main__':
     # let's send a file
     #Message.send("Oakley current configuration file.", filepath="oakley/config.json", meta=False)
     
+    Message.title("Testing input", "#")
+    name = Message("What is your name?", "?").input()
+    with Message("Hello, " + name + "!", "#"):
+        Message("How old are you?", "?").input(parser=int)
     
     
     

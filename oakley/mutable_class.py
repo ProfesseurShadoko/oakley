@@ -364,7 +364,7 @@ class MutableClass(FancyCM):
         if not ignore_tabs:
             # build the output to print by adding tabs to each (non-empty) line
             for i in range(len(lines)):
-                if lines[i].strip() != "":
+                if lines[i] != "":
                     lines[i] = " " + ">" * MutableClass.indent + " " + lines[i]
 
         if MutableClass.capture_output and not ignore_capture:
