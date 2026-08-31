@@ -4,7 +4,6 @@ from .fancy_string import cstr
 from .mutable_class import MutableClass
 from typing import Literal
 import os
-import requests
 from .xconfig import oakley_config
 import sys
 import socket
@@ -584,6 +583,7 @@ class Message(MutableClass):
         content = "```\n" + content + "\n```\n"
 
         # 4. Send
+        import requests
         try:
             if filepath is None:
                 requests.post(
