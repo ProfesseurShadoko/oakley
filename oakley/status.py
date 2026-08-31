@@ -58,7 +58,7 @@ class MemoryView(MutableClass):
         color_letter = 'g' if memory_usage < 0.5 else 'y' if memory_usage < 0.8 else 'r'
         memory_usage_percent = f"{cstr(f'{memory_usage:.0%}'):{color_letter}}"
         
-        self.print(
+        MemoryView.print(
             f"{cstr('[M]').blue()} Current memory usage: {self.get_memory_usage():.2f} GB / {tot_ram:.2f} GB ({memory_usage_percent})"
         )
     
@@ -166,7 +166,7 @@ class DateTime(MutableClass):
         Uses :meth:`MutableClass.time_date` to format the timestamp as
         ``YYYY-MM-DD HH:MM:SS``.
         """
-        self.print(f"{cstr('[D]').magenta()} {self.time_date()}")
+        MemoryView.print(f"{cstr('[D]').magenta()} {self.time_date()}")
         
 
 if __name__ == "__main__":

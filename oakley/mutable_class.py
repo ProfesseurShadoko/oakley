@@ -289,7 +289,6 @@ class MutableClass(FancyCM):
     # !-- Print --! #
     # ------------- #
     
-    @staticmethod
     def print(*args, **kwargs) -> None:
         """
         Print a message with optional indentation and mute control.
@@ -325,6 +324,11 @@ class MutableClass(FancyCM):
         ...     MutableClass.print("Indented")
             > Indented
         """
+        if len(args) > 0 and isinstance(args[0], MutableClass):
+            # --> This is an instance call
+            with MutableClass.tab():
+                MutableClass.print(*args[1:], **kwargs)
+            return
 
         # 1. Handle special kwargs
         ignore_tabs = kwargs.get("ignore_tabs", len(args) == 0)

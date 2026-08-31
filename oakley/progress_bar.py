@@ -138,7 +138,7 @@ class ProgressBar(MutableClass):
         except StopIteration:
             self.spirit.kill() # remove the spirit from the print stack
             ProgressBar.current_instance = None # delete the progressbar, as the loop has ended
-            self.print(ignore_tabs=True) # go to next line
+            ProgressBar.print(ignore_tabs=True) # go to next line
             raise(StopIteration())
         
     
@@ -299,9 +299,9 @@ class ProgressBar(MutableClass):
         if msg != self.previous_print:
             n_to_erase = cstr(self.previous_print).length()
             n_to_erase = min(self._get_terminal_width(min_value=0, margin=5, _ignore_config=True), n_to_erase)
-            self.print("\r", end="", ignore_tabs=True, ignore_capture=True) # go back to the beginning of the line
+            ProgressBar.print("\r", end="", ignore_tabs=True, ignore_capture=True) # go back to the beginning of the line
             n_spaces = max(0, n_to_erase - cstr(msg).length())
-            self.print(msg + n_spaces*" ", end="\n" if newline else "", ignore_capture=ignore_capture) # go back to the beginning of the line and erase previous content
+            ProgressBar.print(msg + n_spaces*" ", end="\n" if newline else "", ignore_capture=ignore_capture) # go back to the beginning of the line and erase previous content
             
             # 3. Update previous print
             self.previous_print = msg

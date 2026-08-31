@@ -73,12 +73,12 @@ class Task(MutableClass):
         Task.last_task_runtime = time.time() - self.start_time
         
         if not self.spirit.is_alive():
-            self.print(
+            Task.print(
                 cstr('[~]').blue(), "Task completed after:", cstr(self.time(Task.last_task_runtime)).blue()
             )
         else:
             self.spirit.kill()
-            self.print(
+            Task.print(
                 f" ({cstr(self.time(time.time()-self.start_time)).blue()})", ignore_tabs=True
             )
         
@@ -96,7 +96,7 @@ class Task(MutableClass):
         if self.spirit.is_alive():
             Task.print(self.spirit.kill(), end='', ignore_tabs=True) # go to new line immediately
 
-        self.print(
+        Task.print(
             cstr('[!]').red(), "Task aborted after:", cstr(self.time(time.time()-self.start_time)).red()
         )
 
@@ -128,7 +128,7 @@ class Task(MutableClass):
     
     def __enter__(self):
         self.__class__.running_tasks.append(self)
-        self.print(
+        Task.print(
             cstr('[~]').blue(), self.msg, end=''
         )
         self.spirit = self.create_spirit("\n")

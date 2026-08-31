@@ -181,7 +181,7 @@ class Message(MutableClass):
         if not self.type in self._active:
             return
         
-        self.print(
+        Message.print(
             self._get_prefix(), self.msg
         )
         
@@ -367,6 +367,7 @@ class Message(MutableClass):
 
             # 3. Split paragraph into lines
             lines = paragraph.split("\n")
+            lines = [cstr(line).strip() for line in lines if cstr(line).strip()]
 
             # 4. Further split lines that are too long (split on the previous space)
             formatted_lines = []
@@ -416,7 +417,7 @@ class Message(MutableClass):
                 # check the string until the first space, and check wether it is an ANSI escape code (and nothing more)
                 if first_space_idx != -1 and cstr(line[:first_space_idx]).length() == 0:
                     line = line[:first_space_idx] + line[first_space_idx+1:]
-                self.print(line)
+                Message.print(line)
     
     @staticmethod
     def title(title:str, type:Literal["#", "?", "!", "i"] = "i") -> None:

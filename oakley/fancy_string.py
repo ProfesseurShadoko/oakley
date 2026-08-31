@@ -174,6 +174,18 @@ class Cstr(str):
         else:
             return len(self)
 
+    def strip(self) -> "str":
+        """
+        Returns the string without leading and trailing whitespace.
+        """
+        stripped = str.strip(self)        
+        no_leading_ansi = re.sub(r'^\033\[[0-9;]*m', '', stripped) # remove leading ANSI
+        no_ansi = re.sub(r'\033\[[0-9;]*m$', '', no_leading_ansi) # remove trailing ANSI
+
+        no_ansi_stripped = no_ansi.strip()
+        return self.replace(stripped, no_ansi_stripped)
+        
+
 
 def cstr(obj:object, format_spec:str='') -> 'Cstr':
     """
