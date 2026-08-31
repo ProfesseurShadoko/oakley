@@ -551,8 +551,12 @@ class MutableClass(FancyCM):
             return f"{hrs:02d}:{mins:02d}:{seconds:02d}"
         elif seconds >= 0.01: # thsi way we get 2 significative numbers
             return f"{seconds:.3f}s"
+        elif seconds >= 1e-5:
+            return f"{seconds*1e3:.3f}ms"
+        elif seconds >= 1e-8:
+            return f"{seconds*1e6:.3f}µs"
         else:
-            return f"{seconds*1e9:.0f}ns"
+            return f"{seconds*1e9:.3f}ns"
     
     @staticmethod
     def date() -> str:
