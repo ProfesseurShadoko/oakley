@@ -1,5 +1,5 @@
 
-from .fancy_string import cstr
+from .fancy_string import cstr, Cstr
 from .fancy_context_manager import FancyCM
 from .print_stack import pStack, Spirit
 from .xconfig import oakley_config
@@ -94,6 +94,7 @@ class MutableClass(FancyCM):
     current_capture = {} # dict capture level -> captured string
     
     _initial_directory = None
+    _cstr_colors = {**Cstr._COLORS} # store the original colors to restore them if needed
     
     
     # -------------- #
@@ -226,6 +227,37 @@ class MutableClass(FancyCM):
         """
         MutableClass.untab()
         super().__exit__(*args)
+
+
+    # -------------- #
+    # !-- Colors --! #
+    # -------------- #
+
+    @staticmethod
+    def no_color() -> FancyCM:
+        """
+        Disables colored outputs globally.
+        """
+        cstr_dict = {**Cstr._COLORS}
+        for key in Cstr._COLORS:
+            Cstr._COLORS[key] = ""
+
+        class NoColorContext(FancyCM):
+
+            def __exit__(self, *args):
+                Cstr._COLORS = cstr_dict
+                super().__exit__(*args)
+
+        return NoColorContext()
+
+    @staticmethod
+    def color():
+        """
+        Restores colored outputs globally.
+        """
+        Cstr._COLORS = {**MutableClass._cstr_colors}
+        
+
     
 
     # --------------- #

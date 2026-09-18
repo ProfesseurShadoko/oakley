@@ -372,7 +372,7 @@ class Message(MutableClass):
             formatted_lines = []
             line_is_end_of_paragraph = []
             for line in lines:
-                while cstr(line).length() > terminal_width: # we use cstr.length to count the length without ANSI escape codes
+                while len(cstr(line).strip_ansi()) > terminal_width: # we use cstr.length to count the length without ANSI escape codes
                     # find the last space within the terminal width
                     split_idx = line.rfind(" ", 0, terminal_width)
                     if split_idx == -1:  # no space found, force split
@@ -388,12 +388,19 @@ class Message(MutableClass):
             # by inserting additional spaces until we reach the target length
             justified_lines = []
 
+            for i in justified_lines:
+                line = justified_lines[i]
+                first_space_idx = line.find(" ")
+                if first_space_idx != -1 and len(cstr(line[:first_space_idx]).strip_ansi()) == 0:
+                    line = line[:first_space_idx] + line[first_space_idx+1:]
+                justified_lines[i] = line
+
             if len(formatted_lines) == 0:
                 return # nothing to print, otherwise bug in next line
-            justification_target_length = max([cstr(line).length() for line in formatted_lines])
+            justification_target_length = max([len(cstr(line).strip_ansi()) for line in formatted_lines])
             for line, is_end_of_paragraph in zip(formatted_lines, line_is_end_of_paragraph):
                 if not is_end_of_paragraph:
-                    while cstr(line).length() < justification_target_length:
+                    while len(cstr(line).strip_ansi()) < justification_target_length:
                         for caracter in [".", ":", ";", ",", " "]: # insert additional spaces after these characters first
                             # find all occurrences of the caracter in the line
                             indices = [i for i, c in enumerate(line) if c == caracter and not (i==len(line)-1 or (line[i+1] != " " and c != " "))] # only add spaces if a space already exists. do not add spaces if there wasn't a space in the first place
@@ -401,7 +408,7 @@ class Message(MutableClass):
                             index_offset = 0
                             for idx in indices:
                                 idx += index_offset
-                                if cstr(line).length() < justification_target_length:
+                                if len(cstr(line).strip_ansi()) < justification_target_length:
                                     line = line[:idx+1] + " " + line[idx+1:]
                                     index_offset += 1
                                 else:
@@ -412,10 +419,10 @@ class Message(MutableClass):
                 # I have one final issue. If the line starts with an ANSI escape code, then a space, then a word, 
                 # the space won't be removed. I need to take care of this edge case by removing spaces that are right after an ANSI escape code at the beginning of the line
                 # find the first space occurence
-                first_space_idx = line.find(" ")
+                # first_space_idx = line.find(" ")
                 # check the string until the first space, and check wether it is an ANSI escape code (and nothing more)
-                if first_space_idx != -1 and cstr(line[:first_space_idx]).length() == 0:
-                    line = line[:first_space_idx] + line[first_space_idx+1:]
+                # if first_space_idx != -1 and cstr(line[:first_space_idx]).length() == 0:
+                #     line = line[:first_space_idx] + line[first_space_idx+1:]
                 Message.print(line)
     
     @staticmethod
@@ -461,7 +468,7 @@ class Message(MutableClass):
         }[type]
 
         # 1. Count the number of letters in the title (without ANSI escape codes)
-        n_letters = cstr(title).length()
+        n_letters = len(cstr(title).strip_ansi())
 
         # 2. Create the title string with the correct format
         dot_str = "-" * (n_letters + 8)
